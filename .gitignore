@@ -2,6 +2,11 @@ db-info.js
 node_modules
 mongo-db-info.js
 
+# SQLite database files
+data/*.db
+data/*.db-wal
+data/*.db-shm
+
 #################
 ## Eclipse
 #################
@@ -220,3 +225,4 @@ pip-log.txt
 journeyship.com.conf
 post-receive.sh
 mongo-db-info.js
+/node_modules

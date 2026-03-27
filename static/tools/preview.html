@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Block Preview</title>
+  <style>
+    body {
+      background: #1a1a1a;
+      color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      padding: 40px;
+      text-align: center;
+    }
+    h1 {
+      font-size: 18px;
+      font-weight: 500;
+      margin-bottom: 20px;
+    }
+    .preview-container {
+      display: inline-block;
+      padding: 20px;
+      border-radius: 8px;
+      background: #fff;
+    }
+    canvas {
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+    }
+    .controls {
+      margin-bottom: 30px;
+    }
+    select {
+      background: #333;
+      color: #fff;
+      border: 1px solid #555;
+      padding: 8px 12px;
+      border-radius: 4px;
+      font-size: 14px;
+      min-width: 150px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Block Preview</h1>
+
+  <div class="controls">
+    <select id="block">
+      <option value="">Loading...</option>
+    </select>
+  </div>
+
+  <div class="preview-container">
+    <canvas id="preview" width="120" height="120"></canvas>
+  </div>
+
+
+  <script>
+    var canvas = document.getElementById('preview');
+    var ctx = canvas.getContext('2d');
+    var blockLayers = [];
+    var blockWidth = 20;
+    var blockHeight = 20;
+    var currentFrame = 0;
+    var animationInterval;
+
+    var speed = 250;
+
+    function renderFrame(frameIndex) {
+      if (!blockLayers.length) return;
+
+      var layer = blockLayers[frameIndex];
+      // Auto-scale: scenes (large) use 3px, blocks (20x20) use 12px
+      var pixelSize = (blockWidth > 20 || blockHeight > 20) ? 3 : 12;
+      var canvasWidth = blockWidth * pixelSize;
+      var canvasHeight = blockHeight * pixelSize;
+
+      canvas.width = canvasWidth;
+      canvas.height = canvasHeight;
+      ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+
+      for (var i = 0; i < layer.length; i++) {
+        var color = layer[i];
+        if (color !== 'transparent') {
+          var x = (i % blockWidth) * pixelSize;
+          var y = Math.floor(i / blockWidth) * pixelSize;
+          ctx.fillStyle = color;
+          ctx.fillRect(x, y, pixelSize, pixelSize);
+        }
+      }
+
+    }
+
+    function startAnimation() {
+      clearInterval(animationInterval);
+      if (blockLayers.length > 1) {
+        animationInterval = setInterval(function() {
+          currentFrame = (currentFrame + 1) % blockLayers.length;
+          renderFrame(currentFrame);
+        }, speed);
+      }
+    }
+
+    function loadBlock(name) {
+      if (!name) return;
+
+      fetch('/tools/blocks/' + name + '.json')
+        .then(res => res.json())
+        .then(data => {
+          blockLayers = data.layers;
+          blockWidth = data.width || 20;
+          blockHeight = data.height || 20;
+          currentFrame = 0;
+          renderFrame(0);
+          startAnimation();
+        })
+        .catch(err => {
+          console.error('Failed to load block:', err);
+        });
+    }
+
+    function loadBlockList() {
+      fetch('/tools/blocks/list')
+        .then(res => res.json())
+        .then(blocks => {
+          var select = document.getElementById('block');
+          select.innerHTML = '';
+
+          if (blocks.length === 0) {
+            select.innerHTML = '<option value="">No blocks found</option>';
+            return;
+          }
+
+          blocks.forEach(function(name) {
+            var option = document.createElement('option');
+            option.value = name;
+            option.textContent = name;
+            select.appendChild(option);
+          });
+
+          // Load first block
+          loadBlock(blocks[0]);
+        })
+        .catch(err => {
+          console.error('Failed to load block list:', err);
+        });
+    }
+
+    // Event listeners
+    document.getElementById('block').addEventListener('change', function() {
+      loadBlock(this.value);
+    });
+
+    // Initialize
+    loadBlockList();
+  </script>
+</body>
+</html>

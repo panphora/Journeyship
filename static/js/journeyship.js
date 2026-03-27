@@ -876,6 +876,7 @@ ColorPalette.prototype.generatePaletteElement = function (value) {
 
     $paletteElementContainer.append($animatedElement);
     $paletteElementContainer.data('paletteValue', {type: 'animated', value: animatedBlock});
+    $paletteElementContainer.addClass('animated-block');
   } else if (typeof(value) === 'string') {
     var color = value;
 
@@ -885,6 +886,7 @@ ColorPalette.prototype.generatePaletteElement = function (value) {
 
     $paletteElementContainer.append($colorElement);
     $paletteElementContainer.data('paletteValue', {type: 'color', value: color});
+    $paletteElementContainer.addClass('solid-color');
   }
 
   this.paletteElements.push($paletteElementContainer);
@@ -982,6 +984,76 @@ $('#new-block').on('click', function (event) {
   $('#constructor-container').show();
   editorArea.makeNewAnimatedBlock();
   mainColorPalette.addStyle(new AnimatedBlock(_.cloneDeep(editorArea.animatedBlock.layers), {uniqueId: editorArea.animatedBlock.uniqueId}));
+});
+
+// Auto-update logic: debounced update when editor changes
+var autoUpdateTimeout;
+function scheduleAutoUpdate() {
+  clearTimeout(autoUpdateTimeout);
+  autoUpdateTimeout = setTimeout(function() {
+    performBlockUpdate();
+  }, 300);
+}
+
+function performBlockUpdate() {
+  var animBlock = editorArea.animatedBlock;
+  if (!animBlock) return;
+
+  if (animBlock.fromMainCanvas) {
+    // update the animated block at the saved position with the new layers
+    if (animBlock.mainCanvasOnBackground) {
+      if (mainArea.selectedDrawableSurface().map[animBlock.mainCanvasPosition]) {
+        mainArea.selectedDrawableSurface().map[animBlock.mainCanvasPosition].layers = _.cloneDeep(animBlock.layers);
+        mainArea.selectedDrawableSurface().map[animBlock.mainCanvasPosition].regeneratePrerenderedLayers();
+      }
+    } else {
+      if (mainArea.selectedDrawableSurface().animatedMap[animBlock.mainCanvasPosition]) {
+        mainArea.selectedDrawableSurface().animatedMap[animBlock.mainCanvasPosition].layers = _.cloneDeep(animBlock.layers);
+        mainArea.selectedDrawableSurface().animatedMap[animBlock.mainCanvasPosition].regeneratePrerenderedLayers();
+      }
+    }
+
+    // reset animation indices
+    _.each(mainArea.selectedDrawableSurface().map, function (block) {
+      if (block && typeof(block) === 'object' && block.layers) {
+        block.resetIndex();
+      }
+    });
+    _.each(mainArea.selectedDrawableSurface().animatedMap, function (block) {
+      if (block && typeof(block) === 'object' && block.layers) {
+        block.resetIndex();
+      }
+    });
+  } else if (animBlock.uniqueId && mainColorPalette) {
+    mainColorPalette.saveCustomBlock(_.cloneDeep(animBlock.layers), animBlock.uniqueId);
+
+    // reset animations to line up
+    _.each(mainColorPalette.map, function (block) {
+      if (block && block.layers) {
+        block.resetIndex();
+      }
+    });
+  }
+
+  // Schedule auto-save after block updates
+  if (typeof scheduleAutoSave === 'function') {
+    scheduleAutoSave();
+  }
+}
+
+// Subscribe to editor updates for auto-save
+$.subscribe('updated-map', function (event, update) {
+  if (update.surface === editorArea.selectedDrawableSurface()) {
+    scheduleAutoUpdate();
+  }
+});
+
+$.subscribe('added-layer', function () {
+  scheduleAutoUpdate();
+});
+
+$.subscribe('removed-layer', function () {
+  scheduleAutoUpdate();
 });
 
 $('#save-block').on('click', function (event) {
@@ -1099,6 +1171,46 @@ $('#bg-fg-switch').on('click', function (event) {
       mainArea.selectedDrawableSurface().setupSelectedBlock(mainArea.selectedDrawableSurface().selectedBlock.position);
     }
   }
+});
+
+// Canvas layer panel - Photoshop-style layer switching
+var currentCanvasLayer = 'foreground';
+
+function updatePaletteVisibility() {
+  var $palette = $('#main-color-palette');
+  if (currentCanvasLayer === 'foreground') {
+    $palette.find('.solid-color').hide();
+    $palette.find('.animated-block').show();
+  } else {
+    $palette.find('.solid-color').show();
+    $palette.find('.animated-block').hide();
+  }
+}
+
+function selectCanvasLayer(layer) {
+  currentCanvasLayer = layer;
+
+  $('.canvas-layers-panel .layer-item').removeClass('selected');
+  $('.canvas-layers-panel .layer-item[data-layer="' + layer + '"]').addClass('selected');
+
+  if (layer === 'foreground') {
+    mainArea.selectedDrawableSurface().drawOnBackground = false;
+  } else {
+    mainArea.selectedDrawableSurface().drawOnBackground = true;
+  }
+
+  updatePaletteVisibility();
+
+  // reset selected block
+  if (mainArea.selectedDrawableSurface().selectedBlock) {
+    mainArea.selectedDrawableSurface().setupSelectedBlock(mainArea.selectedDrawableSurface().selectedBlock.position);
+  }
+}
+
+$('.canvas-layers-panel .layer-item').on('click', function(event) {
+  event.preventDefault();
+  var layer = $(this).data('layer');
+  selectCanvasLayer(layer);
 });
 
 var paletteElementThatWasSelected;
@@ -1226,9 +1338,9 @@ function addNewBackground (name, author, nameUrl, authorUrl, textColor, textShad
   backgrounds.push(newBackground);
 }
 
+addNewBackground('Tree Bark', '', 'http://subtlepatterns.com/tree-bark/', '', '#222', '#fff', '/img/backgrounds/tree_bark.png', '/img/logos/journeyship-logo.png');
 addNewBackground('Wild Olivia', 'Badhon Ebrahim', 'http://subtlepatterns.com/wild-oliva/', 'http://dribbble.com/graphcoder', '#fff', '#333', '/img/backgrounds/wild_oliva.png', '/img/logos/journeyship-logo.png');
 addNewBackground('Shattered', 'Luuk van Baars', 'http://subtlepatterns.com/shattered/', 'http://luukvanbaars.com/', '#222', '#fff', '/img/backgrounds/shattered.png', '/img/logos/journeyship-logo.png');
-addNewBackground('Tree Bark', 'GetDiscount', 'http://subtlepatterns.com/tree-bark/', 'http://getdiscount.co.uk/', '#222', '#fff', '/img/backgrounds/tree_bark.png', '/img/logos/journeyship-logo.png');
 addNewBackground('Tweed', 'Simon Leo', 'http://subtlepatterns.com/tweed/', '#', '#fff', '#333', '/img/backgrounds/tweed.png', '/img/logos/journeyship-logo.png');
 addNewBackground('DinPattern Blueprint', 'Evan Eckard', 'http://www.dinpattern.com/2011/05/31/blueprint/', 'http://www.evaneckard.com/', '#222', '#fff', '/img/backgrounds/blueprint.gif', '/img/logos/journeyship-logo.png');
 addNewBackground('Party Lights', 'Patrick Hoesly', 'http://www.flickr.com/photos/zooboing/4425770337/', 'http://www.flickr.com/photos/zooboing/', '#fff', '#333', '/img/backgrounds/party-lights.jpg', '/img/logos/journeyship-logo.png');
@@ -1257,11 +1369,16 @@ function selectThisBackground (bg) {
   $bgInfo
     .children('.background-image-name')
     .text(bg.name)
-    .attr('href', bg.nameUrl)
-    .end()
-    .children('.background-image-artist')
-    .text(bg.author)
-    .attr('href', bg.authorUrl);
+    .attr('href', bg.nameUrl);
+
+  if (bg.author) {
+    $bgInfo.find('.background-image-artist-wrapper').show();
+    $bgInfo.find('.background-image-artist')
+      .text(bg.author)
+      .attr('href', bg.authorUrl);
+  } else {
+    $bgInfo.find('.background-image-artist-wrapper').hide();
+  }
 
   selectedBackgroundImage = bg;
 }
@@ -1302,12 +1419,18 @@ var loadData = function (data) {
 
   selectThisBackground(data.options.selectedBackground);
 
+  // Default to foreground layer and update palette visibility
+  setTimeout(function() {
+    selectCanvasLayer('foreground');
+  }, 100);
+
   return data;
 };
 
 var load = function () {
 
-  var paths = window.location.pathname.match(/\/(\d+)\/?(\d+)?/);
+  // Match alphanumeric story ID (nanoid format)
+  var paths = window.location.pathname.match(/\/([A-Za-z0-9]+)\/?(\d+)?/);
 
   if (paths) {
 
@@ -1340,7 +1463,10 @@ var load = function () {
 
     mainColorPalette = new ColorPalette (_.union(colors, contentBlocks), $('#main-color-palette'), mainArea);
     editorAreaColorPalette = new ColorPalette (colors, $('#constructor-color-palette'), editorArea, defaultEditCellSize);
-    selectThisBackground(backgrounds[_.random(backgrounds.length - 1)]);
+    selectThisBackground(backgrounds[0]);
+
+    // Default to foreground layer and update palette visibility
+    selectCanvasLayer('foreground');
   }
 
 };
@@ -1374,7 +1500,8 @@ var exportData = function () {
 var saveData = function (callback) {
   storyData = exportData();
 
-  var paths = window.location.pathname.match(/\/(\d+)\/?(\d+)?/);
+  // Match alphanumeric story ID (nanoid format)
+  var paths = window.location.pathname.match(/\/([A-Za-z0-9]+)\/?(\d+)?/);
 
   var dataToSave = {
     story: storyData
@@ -1390,18 +1517,15 @@ var saveData = function (callback) {
     url: '/savestory/',
     data: dataToSave,
     success: function (result) {
-      var ids = result._id.split("-");
-      var id = ids[0];
-      var version = parseInt(ids[1], 10); // get a number so if it's 0 there's no second slash for the first save
+      var id = result._id;
+      var version = result.version;
 
-      var newPath = '/' + id + '/' + (version ? version + '/' : '');
+      var newPath = '/' + id + (version ? '/' + version : '') + '/';
       if (!Modernizr.history) {
         window.location.pathname = newPath;
       } else {
         History.pushState(null, null, newPath);
       }
-      
-      version = result.version;
 
       if (callback) {
         callback();
@@ -1504,6 +1628,100 @@ $("#take-tour").on('click', function (event) {
   event.preventDefault();
   hopscotch.endTour();
   hopscotch.startTour(tour, 0);
+});
+
+// Auto-save functionality
+var autoSaveTimeout;
+var isSaving = false;
+var $saveStatus = $('#save-status');
+
+function setSaveStatus(status) {
+  $saveStatus.removeClass('saving error');
+  if (status === 'saving') {
+    $saveStatus.addClass('saving').text('Saving...');
+  } else if (status === 'error') {
+    $saveStatus.addClass('error').text('Error saving');
+  } else {
+    $saveStatus.text('Saved');
+  }
+}
+
+function scheduleAutoSave() {
+  clearTimeout(autoSaveTimeout);
+  autoSaveTimeout = setTimeout(performAutoSave, 2000);
+}
+
+function performAutoSave() {
+  if (isSaving) {
+    scheduleAutoSave();
+    return;
+  }
+
+  isSaving = true;
+  setSaveStatus('saving');
+
+  var storyData = exportData();
+  // Match alphanumeric story ID (nanoid format)
+  var paths = window.location.pathname.match(/\/([A-Za-z0-9]+)\/?(\d+)?/);
+
+  var dataToSave = {
+    story: storyData
+  };
+
+  if (paths && paths[1]) {
+    dataToSave._id = paths[1];
+  }
+
+  $.ajax({
+    type: 'post',
+    url: '/savestory/',
+    data: dataToSave,
+    success: function (result) {
+      isSaving = false;
+      setSaveStatus('saved');
+
+      var id = result._id;
+      var version = result.version;
+
+      var newPath = '/' + id + (version ? '/' + version : '') + '/';
+      if (Modernizr.history) {
+        History.replaceState(null, null, newPath);
+      }
+    },
+    error: function (error) {
+      isSaving = false;
+      setSaveStatus('error');
+    }
+  });
+}
+
+// Prevent leaving page while saving
+window.addEventListener('beforeunload', function (e) {
+  if (isSaving) {
+    e.preventDefault();
+    e.returnValue = '';
+    return '';
+  }
+});
+
+// Hook into main canvas mouseup to trigger auto-save
+$('#main-area').on('mouseup', function () {
+  scheduleAutoSave();
+});
+
+// Hook into block deletion from main canvas
+$('#delete-block-from-main-canvas').on('click', function () {
+  scheduleAutoSave();
+});
+
+// Hook into palette block deletion
+$('#delete-block').on('click', function () {
+  scheduleAutoSave();
+});
+
+// Hook into adding block to palette
+$('#export-block').on('click', function () {
+  scheduleAutoSave();
 });
 
 

@@ -9,131 +9,141 @@
     <link rel="stylesheet" type="text/css" href="/css/style.css">
     <link rel="stylesheet" type="text/css" href="/css/social-likes.css">
     <link rel="stylesheet" type="text/css" href="/css/hopscotch-0.1.1.min.css">
-	<script type="text/javascript">
-	window.heap=window.heap||[],heap.load=function(t,e){window.heap.appid=t,window.heap.config=e;var a=document.createElement("script");a.type="text/javascript",a.async=!0,a.src=("https:"===document.location.protocol?"https:":"http:")+"//cdn.heapanalytics.com/js/heap-"+t+".js";var n=document.getElementsByTagName("script")[0];n.parentNode.insertBefore(a,n);for(var o=function(t){return function(){heap.push([t].concat(Array.prototype.slice.call(arguments,0)))}},p=["clearEventProperties","identify","setEventProperties","track","unsetEventProperty"],c=0;c<p.length;c++)heap[p[c]]=o(p[c])};
-	heap.load("1971473405");
-	</script>
+    <script type="text/javascript">
+      window.heap=window.heap||[],heap.load=function(t,e){window.heap.appid=t,window.heap.config=e;var a=document.createElement("script");a.type="text/javascript",a.async=!0,a.src=("https:"===document.location.protocol?"https:":"http:")+"//cdn.heapanalytics.com/js/heap-"+t+".js";var n=document.getElementsByTagName("script")[0];n.parentNode.insertBefore(a,n);for(var o=function(t){return function(){heap.push([t].concat(Array.prototype.slice.call(arguments,0)))}},p=["clearEventProperties","identify","setEventProperties","track","unsetEventProperty"],c=0;c<p.length;c++)heap[p[c]]=o(p[c])};
+      heap.load("1971473405");
+    </script>
   </head>
   <body>
 
     <div id='load'></div>
+    <div id='save-status'>Saved</div>
 
     <div class='parent-container'>
-      <div class='top-backgrounds-container'>
-      </div>
+      <!-- Logo -->
+      <h1 class="page-heading" id="site-title">Journey Ship</h1>
 
-      <div class='top-button-container'>
-        <a id='new' class='hanging-button' href='/'>New</a>
-        <a id='save' class='hanging-button' href='#'>Save</a>
-        <a id='take-tour' class='hanging-button' href='#'>Take a Tour</a>
-        <a id='see-example' class='hanging-button' href='/1'>See an Example</a>
-        <div style="clear: both"></div>
-        <!--<a id='demo' class='hanging-button' href='/7/1'>View Demo</a>-->    
-      </div>
-
+      <!-- MAIN CANVAS AREA -->
       <div class='main-container'>
-        <h1 class="page-heading" id="site-title">Journey Ship</h1>
-
-        <div id='main-container-top-bar'>
-          <a id='bg-fg-switch' class='edit-button another-button has-icon' href='#'>Edit Foreground</a>
-          <div id='bg-fg-switch-text'>Editing Background Layer</div>
-          <a id='select-block-from-main-canvas' class='select-button another-button has-icon' href='#'>Select</a>
-          <a id='edit-block-from-main-canvas' class='edit-button another-button has-icon' href='#'>Edit</a>
-          <a id='delete-block-from-main-canvas' class='delete-button another-button has-icon' href='#'>Delete</a>
-        </div>
-
-        <div id="main-area-container" class="area-container">
-          <canvas id="main-area" width="1020" height="300"></canvas>
-        </div>
-
-        <div id='main-color-palette-top-bar'>
-          <a id='new-block' class='new-button another-button has-icon' href='#'>New</a>
-          <a id='copy-block' class='copy-button another-button has-icon' href='#'>Copy</a>
-          <a id='delete-block' class='delete-button another-button has-icon' href='#'>Delete</a>
-        </div>
-
-        <div id="main-color-palette" class="color-palette">
-        </div>
-      </div>
-      <div class="clear"></div>
-
-      <div id="constructor-container">
-        <h2 class='area-heading'>
-          Editing Block
-          <div class='constructor-heading-button-container'>
-            <a id='save-block' class="save-button another-button has-icon" href="#">Update</a>
-            <a id='export-block' class="save-button another-button has-icon" href="#">Transfer to palette</a>          
-          </div>
-        </h2>
-        <div id="constructor-color-palette" class="color-palette">
-        </div>
-
-        <div id="constructor-layers-container">
-          <h3 class="section-heading">Preview</h3>
-          <div id="preview-container" class="preview-container area-container">
-            <canvas class='block' width='60' height='60'></canvas>
+        <div class="canvas-workspace">
+          <!-- Left: Photoshop-style layer panel -->
+          <div class="canvas-layers-panel">
+            <div class="panel-header">Layers</div>
+            <div class="layer-item selected" data-layer="foreground">
+              <div class="layer-thumb"><canvas width="32" height="32"></canvas></div>
+              <span class="layer-name">Foreground</span>
+            </div>
+            <div class="layer-item" data-layer="background">
+              <div class="layer-thumb"><canvas width="32" height="32"></canvas></div>
+              <span class="layer-name">Background</span>
+            </div>
           </div>
 
-          <h3 class="section-heading">Layers</h3>
-          <div class="layers">
-          </div>
-          <div class="buttons-container">
-            <a id="new-layer" class="new-button another-button has-icon" href="#">New Layer</a>
-            <a id="copy-layer" class="copy-button another-button has-icon" href="#">Copy Layer</a>
-            <a id="delete-layer" class="delete-button another-button has-icon" href="#">Delete Layer</a>
-            <div class='option-container'>
-              <label><input type='checkbox' id='enable-shadow' class='checkbox' /> <div class='option'>Make top layer<br/>transparent</div></label>
+          <!-- Center: Canvas + controls -->
+          <div class="canvas-main">
+            <div class="canvas-header">
+              <h2>Scene</h2>
+              <p class="canvas-instructions">Your animated scene. Click to place blocks from the palette below.</p>
+            </div>
+            <div id='main-container-top-bar'>
+              <a id='select-block-from-main-canvas' class='btn btn-secondary' href='#'>Select Block</a>
+              <a id='edit-block-from-main-canvas' class='btn btn-secondary' href='#'>Edit</a>
+              <a id='delete-block-from-main-canvas' class='btn btn-danger' href='#'>Delete</a>
+            </div>
+
+            <div id="main-area-container" class="area-container">
+              <canvas id="main-area" width="960" height="360"></canvas>
             </div>
           </div>
         </div>
 
-        <div id="constructor-area-container" class="area-container">
+        <!-- Palette -->
+        <div id='main-color-palette-container'>
+          <div id='main-color-palette-top-bar'>
+            <a id='new-block' class='btn btn-secondary' href='#'>New Block</a>
+            <a id='copy-block' class='btn btn-secondary' href='#'>Copy</a>
+            <a id='delete-block' class='btn btn-danger' href='#'>Delete</a>
+          </div>
+          <div id="main-color-palette" class="color-palette"></div>
+        </div>
+      </div>
+
+      <!-- BLOCK EDITOR -->
+      <div id="block-editor-container">
+        <div class="editor-header">
+          <h2>Block Editor</h2>
+          <p class="editor-instructions">Create an animated character or object here. Each layer is a frame of animation.</p>
         </div>
 
-        <div class='constructor-footer'>
+        <div class="editor-content">
+          <!-- Left: Layer panel (Photoshop-style) -->
+          <div class="editor-layers-panel">
+            <div class="panel-header">Layers</div>
+            <div class="layers"></div>
+            <div class="layer-actions">
+              <a id="new-layer" class="btn-icon" href="#" title="New Layer">+</a>
+              <a id="copy-layer" class="btn-icon" href="#" title="Copy Layer">⧉</a>
+              <a id="delete-layer" class="btn-icon" href="#" title="Delete Layer">×</a>
+            </div>
+            <div class='layer-options'>
+              <label><input type='checkbox' id='enable-shadow' class='checkbox' /> Transparent top layer</label>
+            </div>
+          </div>
+
+          <!-- Center: Canvas for drawing -->
+          <div id="constructor-area-container" class="area-container"></div>
+
+          <!-- Right: Preview + Colors -->
+          <div class="editor-sidebar">
+            <div class="preview-section">
+              <div class="panel-header">Preview</div>
+              <div id="preview-container" class="preview-container area-container">
+                <canvas class='block' width='60' height='60'></canvas>
+              </div>
+            </div>
+            <div class="colors-section">
+              <div class="panel-header">Colors</div>
+              <div id="constructor-color-palette" class="color-palette"></div>
+            </div>
+            <div class="editor-actions">
+              <a id='export-block' class="btn btn-primary btn-full" href="#">Add to Palette</a>
+            </div>
+          </div>
+        </div>
+
+        <div class='editor-footer'>
           <div class='import-export-container'>
-            <div class='button-holder'><a href='#' id='import-editor-block'>Import</a> / <a href='#' id='export-editor-block'>Export</a></div>
+            <span class='import-export-links'><a href='#' id='import-editor-block'>Import</a> / <a href='#' id='export-editor-block'>Export</a></span>
             <div id='export-editor-block-url-container'>
-              <div><input id='export-editor-block-url' type='text' /></div>
+              <input id='export-editor-block-url' type='text' />
             </div>
             <div id='import-editor-block-url-container'>
-              <div><input id='import-editor-block-url' type='text' /></div>
-              <div><a href='#' id='import-editor-block-button' class='another-button'>Import Editor Area</a></div>
+              <input id='import-editor-block-url' type='text' />
+              <a href='#' id='import-editor-block-button' class='btn btn-secondary'>Import</a>
             </div>
           </div>
         </div>
-
-        <div class="clear"></div>
       </div>
 
+      <div class="clear"></div>
+
       <div class="footer">
-        <div class="license-info">
-          <span xmlns:dct="http://purl.org/dc/terms/" xmlns:vcard="http://www.w3.org/2001/vcard-rdf/3.0#">
-            This animation is licensed under the public domain 
-            <a rel="license" href="http://creativecommons.org/publicdomain/zero/1.0/">
-              <img src="http://i.creativecommons.org/p/zero/1.0/80x15.png" style="border-style: none;" alt="CC0" />
-            </a>
-          </span>
-        </div>        
-        <div class="background-image-info">
-          <span>the background image is</span> <a class="background-image-name" href="#"></a> by <a class="background-image-artist" href="#"></a> &copy; 2013
+        <div class="footer-content">
+          <div class="footer-left">
+            <div class="background-image-info">
+              Background: <a class="background-image-name" href="#"></a><span class="background-image-artist-wrapper"> by <a class="background-image-artist" href="#"></a></span>
+            </div>
+          </div>
+          <div class="footer-right">
+            <a href="mailto:david@storylog.com">david@storylog.com</a>
+          </div>
         </div>
-        <ul class="social-likes" data-url="http://journeyship.com">
-          <li class="facebook" title="Share link on Facebook">Facebook</li>
-          <li class="twitter" title="Share link on Twitter">Twitter</li>
-          <li class="plusone" title="Share link on Google+">Google+</li>
-        </ul>
-		<div class="contact-me" style="
-		    margin-top: 18px;
-		    text-align: center;
-		    margin-bottom: 8px;
-		">Contact me: <a href="mailto:david@storylog.com">david@storylog.com</a></div>
       </div>
     </div>
 
     <script type="text/javascript" src='/js/jquery-1.10.2.min.js'></script>
     <!--[if lt IE 9]>
-    <link rel="stylesheet" type="text/css" href="/css/jquery.reject.css">    
+    <link rel="stylesheet" type="text/css" href="/css/jquery.reject.css">
     <script type="text/javascript" src='/js/jquery.reject.min.js'></script>
     <script type="text/javascript" src='/js/reject.js'></script>
     <![endif]-->
@@ -148,19 +158,10 @@
     <script type="text/javascript" src='/js/helpers.js'></script>
     <script type="text/javascript" src='/js/movement.js'></script>
     <script type="text/javascript" src='/js/hopscotch-0.1.1.min.js'></script>
-    <script type="text/javascript" src='/js/tour.js'></script>        
+    <script type="text/javascript" src='/js/tour.js'></script>
     <script type="text/javascript" src='/js/journeyship.js'></script>
-    <script type="text/javascript" src='/js/social-likes.min.js'></script>    
+    <script type="text/javascript" src='/js/social-likes.min.js'></script>
     <!--<![endif]-->
 
   </body>
 </html>
-
-
-
-
-
-
-
-
-
